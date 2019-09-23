@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
+import com.senior.notification.ChannelManager.Companion.getChannelId
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlin.random.Random
 
@@ -16,7 +17,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         init.setOnClickListener {
-            NotificationChannels.create(this)
+            ChannelManager.create(this)
         }
 
         update.setOnClickListener {
@@ -40,8 +41,16 @@ class MainActivity : AppCompatActivity() {
             startActivityForResult(intent, 1)
         }
 
+        update_local.setOnClickListener {
+            val uri = Uri.parse("android.resource://${this.packageName}/${R.raw.mixin}")
+            defaultSharedPreferences.putString("RINGTONE", uri.toString())
+            if (!ChannelManager.updateChannelSound(this, getChannelId(this), uri)) {
+                ChannelManager.create(this)
+            }
+        }
+
         notify.setOnClickListener {
-            val notificationBuilder = NotificationCompat.Builder(this, "CHANNEL_MESSAGE")
+            val notificationBuilder = NotificationCompat.Builder(this, getChannelId(this))
             notificationBuilder.setTicker("ticker")
             notificationBuilder.setContentText("Content Text")
             notificationBuilder.setContentTitle("Content title")
@@ -66,8 +75,8 @@ class MainActivity : AppCompatActivity() {
             val uri: Uri? = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
             uri?.let {
                 defaultSharedPreferences.putString("RINGTONE", it.toString())
-                if (!NotificationChannels.updateChannelSound(this, "CHANNEL_MESSAGE", it)) {
-                    NotificationChannels.create(this)
+                if (!ChannelManager.updateChannelSound(this, getChannelId(this), it)) {
+                    ChannelManager.create(this)
                 }
             }
         } else {

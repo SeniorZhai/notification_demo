@@ -21,3 +21,6 @@ inline val Context.defaultSharedPreferences: SharedPreferences
 inline fun SharedPreferences.putString(key: String, value: String?) {
     this.edit().putString(key, value).apply()
 }
+inline fun SharedPreferences.putInt(key: String, value: Int) {
+    this.edit().putInt(key, value).apply()
+}

@@ -11,14 +11,14 @@ import android.provider.Settings
 import android.util.Log
 import androidx.annotation.RequiresApi
 
-class NotificationChannels {
+class ChannelManager {
 
     companion object {
         fun create(context: Context) {
             supportsOreo {
                 val messageChannel =
                     NotificationChannel(
-                        "CHANNEL_MESSAGE",
+                        getChannelId(context),
                         "Message",
                         NotificationManager.IMPORTANCE_HIGH
                     )
@@ -43,6 +43,11 @@ class NotificationChannels {
             }
         }
 
+        fun getChannelId(context: Context): String {
+            return "MESSAGE_${context.defaultSharedPreferences.getInt("Channel_Version", 0)}"
+        }
+
+        @Synchronized
         fun updateChannelSound(context: Context, id: String, uri: Uri): Boolean {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val existingChannel =
@@ -52,7 +57,13 @@ class NotificationChannels {
                 } catch (e: Exception) {
                     Log.e("___", e.localizedMessage)
                 }
-                val newChannel = copyChannel(existingChannel, id)
+                val oldVersion = context.defaultSharedPreferences.getInt("Channel_Version", 0)
+                val newChannel = copyChannel(
+                    existingChannel,
+                    "MESSAGE_${oldVersion + 1}"
+                )
+
+                context.defaultSharedPreferences.putInt("Channel_Version", oldVersion + 1)
                 newChannel.setSound(
                     uri,
                     AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_UNKNOWN)
